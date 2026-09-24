@@ -5,13 +5,27 @@ from tkinter import messagebox
 class AplikasiBiodata(tk.Tk):
     # Metode __init__ adalah constructor yang akan dijalankan saat objek dibuat
     def __init__(self):
-        # Memanggil constructor dari kelas induk (tk.Tk)
         super().__init__()
-
-        # Mengkonfigurasi window utama
-        self.title("Aplikasi Biodata (Versi OOP)")
+        self.title("Aplikasi Biodata Mahasiswa")
         self.geometry("500x600")
         self.resizable(True, True)
+
+        # Database user sederhana (dalam aplikasi nyata, ini akan di database)
+        self.users_db = {
+            "admin": "123",
+            "azdi": "sidamulya123",
+            "mahasiswa": "123456"
+        }
+
+        # Status login
+        self.current_user = None
+
+        # Warna background berdasarkan username
+        self.warna_per_user = {
+            "admin": "#dfeeff",
+            "azdi": "#dff7df",
+            "mahasiswa": "#ffd9cc"
+        }
 
         # Atribut untuk manajemen frame
         self.frame_aktif = None
@@ -24,6 +38,7 @@ class AplikasiBiodata(tk.Tk):
 
         # Tampilkan frame login di awal
         self._pindah_ke(self.frame_login)
+        
 
     def _buat_tampilan_biodata(self):  
 
@@ -209,7 +224,27 @@ class AplikasiBiodata(tk.Tk):
         )
         self.label_hasil.grid(row=7, column=0, columnspan=2, sticky="W", padx=10)
 
+        # Membuat menu
+        self._buat_menu()
+
         # (Di sini kita akan meletakkan semua kode GUI nantinya)
+
+    def _buat_menu(self):
+        """Membuat menu bar untuk aplikasi"""
+        menu_bar = tk.Menu(master=self)
+        self.config(menu=menu_bar)
+
+        file_menu = tk.Menu(master=menu_bar, tearoff=0)
+        file_menu.add_command(label="Logout", command=self._logout)
+        file_menu.add_separator()
+        file_menu.add_command(label="Keluar", command=self.destroy)
+
+        menu_bar.add_cascade(label="File", menu=file_menu)
+
+    def _hapus_menu(self):
+        """Menghapus menu bar dari window."""
+        empty_menu = tk.Menu(self)
+        self.config(menu=empty_menu)
 
     def _buat_tampilan_login(self):
         self.frame_login = tk.Frame(master=self, padx=20, pady=100)
@@ -265,7 +300,7 @@ class AplikasiBiodata(tk.Tk):
         # Info untuk user
         info_label = tk.Label(
             self.frame_login,
-            text="Info: Username yang tersedia:\nadmin (password: 123)\nuser1 (password: password1)\nmahasiswa (password: 123456)",
+            text="Info: Username yang tersedia:\nadmin (password: 123)\nazdi (password: sidamulya123)\nmahasiswa (password: 123456)",
             font=("Arial", 9),
             fg="gray",
             justify=tk.LEFT
@@ -286,18 +321,106 @@ class AplikasiBiodata(tk.Tk):
             self.after(100, lambda: self.entry_nama.focus_set())
 
     def _coba_login(self):
-        akun_valid = {
-            "admin": "123",
-            "user1": "password1",
-            "mahasiswa": "123456",
-        }
+        """Method untuk memproses attempt login"""
         username = self.entry_username.get().strip()
         password = self.entry_password.get()
 
-        if akun_valid.get(username) == password:
+        # Validasi input kosong
+        if not username or not password:
+            messagebox.showwarning("Login Gagal", "Username dan Password tidak boleh kosong.")
+            self.entry_username.focus_set()
+            return
+
+        # Validasi panjang minimum
+        if len(username) < 3:
+            messagebox.showwarning("Login Gagal", "Username minimal 3 karakter.")
+            self.entry_username.focus_set()
+            return
+
+        # Cek kredensial di database
+        if username in self.users_db and self.users_db[username] == password:
+            self.current_user = username
+            messagebox.showinfo("Login Berhasil", f"Selamat Datang, {username}!")
+            self._reset_form_biodata()
+            self._update_title_with_user()
+            self._atur_warna_berdasarkan_user()
             self._pindah_ke(self.frame_biodata)
+            # Bersihkan field login setelah berhasil
+            self.entry_username.delete(0, tk.END)
+            self.entry_password.delete(0, tk.END)
         else:
-            messagebox.showerror("Login Gagal", "Username atau password salah.")
+            messagebox.showerror("Login Gagal", "Username atau Password salah.")
+            # Bersihkan password dan focus ke username
+            self.entry_password.delete(0, tk.END)
+            self.entry_username.focus_set()
+
+    def _reset_form_biodata(self):
+        """Reset semua field di form biodata"""
+        self.var_nama.set("")
+        self.var_nim.set("")
+        self.var_jurusan.set("")
+        self.text_alamat.delete("1.0", tk.END)
+        self.var_jk.set("Pria")
+        self.var_setuju.set(0)
+        self.label_hasil.config(text="")
+
+    def _update_title_with_user(self):
+        """Update judul window dengan nama user yang login"""
+        if self.current_user:
+            self.title(f"Aplikasi Biodata Mahasiswa - User: {self.current_user}")
+        else:
+            self.title("Aplikasi Biodata Mahasiswa")
+
+    def _atur_warna_berdasarkan_user(self):
+        """Ubah background aplikasi sesuai username yang sedang aktif."""
+        if self.current_user and self.current_user in self.warna_per_user:
+            warna = self.warna_per_user[self.current_user]
+        else:
+            warna = "#f0f0f0"
+
+        self.configure(bg=warna)
+
+        if hasattr(self, "frame_login"):
+            self.frame_login.configure(bg=warna)
+        if hasattr(self, "frame_biodata"):
+            self.frame_biodata.configure(bg=warna)
+        if hasattr(self, "frame_input"):
+            self.frame_input.configure(bg=warna)
+        if hasattr(self, "frame_alamat"):
+            self.frame_alamat.configure(bg=warna)
+        if hasattr(self, "frame_jk"):
+            self.frame_jk.configure(bg=warna)
+
+        for widget in [
+            getattr(self, "label_judul", None),
+            getattr(self, "label_nama", None),
+            getattr(self, "label_nim", None),
+            getattr(self, "label_jurusan", None),
+            getattr(self, "label_alamat", None),
+            getattr(self, "label_jk", None),
+            getattr(self, "check_setuju", None),
+            getattr(self, "label_hasil", None),
+        ]:
+            if widget is not None:
+                widget.configure(bg=warna, fg="#222222")
+
+        for widget in [
+            getattr(self, "btn_submit", None),
+            getattr(self, "btn_login", None),
+        ]:
+            if widget is not None:
+                widget.configure(bg="#f7f7f7")
+
+        for widget in [
+            getattr(self, "entry_nama", None),
+            getattr(self, "entry_nim", None),
+            getattr(self, "entry_jurusan", None),
+            getattr(self, "text_alamat", None),
+            getattr(self, "entry_username", None),
+            getattr(self, "entry_password", None),
+        ]:
+            if widget is not None:
+                widget.configure(bg="#ffffff")
 
     def submit_data(self):
         if self.var_setuju.get() == 0:
@@ -330,6 +453,27 @@ class AplikasiBiodata(tk.Tk):
             self.btn_submit.config(
                 state=tk.NORMAL if form_is_valid else tk.DISABLED
             )
+
+    def _logout(self):
+        """Method untuk logout dan kembali ke halaman login"""
+        if messagebox.askyesno("Logout", f"Apakah {self.current_user} yakin ingin logout?"):
+            # Reset status user
+            self.current_user = None
+            # Hapus menu
+            self._hapus_menu()
+            # Update title
+            self._update_title_with_user()
+            # Reset background ke default
+            self._atur_warna_berdasarkan_user()
+            # Bersihkan field login
+            self.entry_username.delete(0, tk.END)
+            self.entry_password.delete(0, tk.END)
+            # Reset form biodata
+            self._reset_form_biodata()
+            # Kembali ke halaman login
+            self._pindah_ke(self.frame_login)
+            # Focus ke username field
+            self.entry_username.focus_set()
 
     def on_enter(self, event):
         if self.btn_submit["state"] == tk.NORMAL:
