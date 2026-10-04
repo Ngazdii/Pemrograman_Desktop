@@ -1,0 +1,129 @@
+2026-10-01 13:13:16 - INFO - Login attempt for username: admin
+2026-10-01 13:13:16 - INFO - Successful login for user: admin
+2026-10-01 13:13:45 - INFO - Login attempt for username: azdi
+2026-10-01 13:13:45 - INFO - Successful login for user: azdi
+2026-10-01 13:14:02 - INFO - Login attempt for username: admin
+2026-10-01 13:14:02 - INFO - Successful login for user: admin
+2026-10-01 13:20:03 - INFO - Login attempt for username: admin
+2026-10-01 13:20:03 - INFO - Successful login for user: admin
+2026-10-01 13:21:06 - INFO - Data submitted by user: admin - NIM: 24106050098
+2026-10-01 13:21:06 - INFO - Aplikasi dimulai
+2026-10-01 13:39:41 - INFO - Aplikasi dimulai
+2026-10-01 13:39:48 - INFO - Login attempt for username: admin
+2026-10-01 13:39:48 - INFO - Successful login for user: admin
+2026-10-01 13:40:15 - INFO - Data submitted by user: admin - NIM: 118888222222
+2026-10-01 13:48:15 - INFO - Application closed by user: admin
+2026-10-01 13:48:18 - INFO - Aplikasi dimulai
+2026-10-01 13:48:30 - INFO - Login attempt for username: azdi
+2026-10-01 13:48:30 - INFO - Successful login for user: azdi
+2026-10-01 13:48:54 - INFO - Data submitted by user: azdi - NIM: 12345678
+2026-10-01 13:49:58 - INFO - User logout: azdi
+2026-10-01 13:51:13 - INFO - Login attempt for username: admin
+2026-10-01 13:51:13 - INFO - Successful login for user: admin
+2026-10-01 13:51:56 - INFO - Data submitted by user: admin - NIM: 21233333333
+2026-10-01 13:52:02 - INFO - Biodata saved by user: admin - file: biodata_admin_20261001_135202.txt
+2026-10-01 13:52:11 - INFO - Application closed by user: admin
+2026-10-04 14:29:51 - INFO - Aplikasi dimulai
+2026-10-04 14:29:59 - INFO - Login attempt for username: admin
+2026-10-04 14:29:59 - INFO - Successful login for user: admin
+2026-10-04 14:30:41 - INFO - Data submitted by user: admin - NIM: 23106050076
+2026-10-04 14:30:58 - INFO - Biodata saved by user: admin - file: biodata_admin_20261004_143058.txt
+2026-10-04 14:31:41 - INFO - User logout: admin
+2026-10-04 14:31:53 - INFO - Login attempt for username: azdi
+2026-10-04 14:31:53 - INFO - Successful login for user: azdi
+2026-10-04 14:32:08 - INFO - User logout: azdi
+2026-10-04 14:32:18 - INFO - Login attempt for username: mahasiswa1
+2026-10-04 14:32:18 - WARNING - Failed login attempt for username: mahasiswa1
+2026-10-04 14:32:27 - INFO - Login attempt for username: mahasiswa
+2026-10-04 14:32:27 - INFO - Successful login for user: mahasiswa
+2026-10-04 14:32:36 - INFO - User logout: mahasiswa
+2026-10-04 14:32:46 - INFO - Application closed by user: None
+2026-10-04 15:10:12 - INFO - Aplikasi dimulai
+2026-10-04 15:10:21 - INFO - Login attempt for username: azdi
+2026-10-04 15:10:21 - INFO - Successful login for user: azdi
+2026-10-04 15:10:26 - INFO - Application closed by user: azdi
+2026-10-04 15:14:43 - INFO - Aplikasi dimulai
+2026-10-04 15:14:50 - INFO - Login attempt for username: azdi
+2026-10-04 15:14:50 - WARNING - Failed login attempt for username: azdi
+2026-10-04 15:14:55 - INFO - Login attempt for username: azdi
+2026-10-04 15:14:55 - INFO - Successful login for user: azdi
+2026-10-04 15:14:58 - INFO - Application closed by user: azdi
+2026-10-04 15:17:13 - INFO - Aplikasi dimulai
+2026-10-04 15:17:23 - INFO - Login attempt for username: azdi
+2026-10-04 15:17:23 - INFO - Successful login for user: azdi
+2026-10-04 15:17:32 - INFO - Application closed by user: azdi
+2026-10-04 15:17:46 - INFO - Aplikasi dimulai
+2026-10-04 15:17:52 - INFO - Login attempt for username: azdi
+2026-10-04 15:17:52 - INFO - Successful login for user: azdi
+2026-10-04 15:17:56 - INFO - Application closed by user: azdi
+2026-10-04 15:18:06 - INFO - Aplikasi dimulai
+2026-10-04 15:18:13 - INFO - Login attempt for username: admin
+2026-10-04 15:18:13 - INFO - Successful login for user: admin
+2026-10-04 15:18:17 - INFO - Application closed by user: admin
+2026-10-04 15:18:19 - INFO - Aplikasi dimulai
+2026-10-04 15:18:25 - INFO - Login attempt for username: azdi
+2026-10-04 15:18:25 - INFO - Successful login for user: azdi
+2026-10-04 15:18:28 - INFO - Application closed by user: azdi
+2026-10-04 15:18:38 - INFO - Aplikasi dimulai
+2026-10-04 15:18:48 - INFO - Login attempt for username: admin
+2026-10-04 15:18:48 - INFO - Successful login for user: admin
+2026-10-04 15:18:58 - INFO - User logout: admin
+2026-10-04 15:19:04 - INFO - Login attempt for username: mahasiswa
+2026-10-04 15:19:04 - INFO - Successful login for user: mahasiswa
+2026-10-04 15:19:07 - INFO - Application closed by user: mahasiswa
+2026-10-04 15:19:34 - INFO - Aplikasi dimulai
+2026-10-04 15:19:39 - INFO - Login attempt for username: mahasiswa
+2026-10-04 15:19:39 - INFO - Successful login for user: mahasiswa
+2026-10-04 15:19:43 - INFO - Application closed by user: mahasiswa
+2026-10-04 15:20:53 - INFO - Aplikasi dimulai
+2026-10-04 15:20:57 - INFO - Login attempt for username: mahasiswa
+2026-10-04 15:20:57 - INFO - Successful login for user: mahasiswa
+2026-10-04 15:21:14 - INFO - Data submitted by user: mahasiswa - NIM: 212312122
+2026-10-04 15:21:15 - INFO - Application closed by user: mahasiswa
+2026-10-04 15:25:19 - INFO - Aplikasi dimulai
+2026-10-04 15:25:44 - INFO - Application closed by user: None
+2026-10-04 15:29:00 - INFO - Aplikasi dimulai
+2026-10-04 15:29:14 - INFO - Login attempt for username: azdi
+2026-10-04 15:29:14 - INFO - Successful login for user: azdi
+2026-10-04 15:29:19 - INFO - User logout: azdi
+2026-10-04 15:29:23 - INFO - Application closed by user: None
+2026-10-04 15:33:31 - INFO - Aplikasi dimulai
+2026-10-04 15:33:40 - INFO - Login attempt for username: mahasiswa
+2026-10-04 15:33:40 - INFO - Successful login for user: mahasiswa
+2026-10-04 15:35:46 - INFO - User logout: mahasiswa
+2026-10-04 15:35:48 - INFO - Application closed by user: None
+2026-10-04 15:36:05 - INFO - Aplikasi dimulai
+2026-10-04 15:36:10 - INFO - Login attempt for username: admin
+2026-10-04 15:36:10 - INFO - Successful login for user: admin
+2026-10-04 15:36:24 - INFO - Application closed by user: admin
+2026-10-04 15:38:37 - INFO - Aplikasi dimulai
+2026-10-04 15:38:45 - INFO - Login attempt for username: azdi
+2026-10-04 15:38:45 - INFO - Successful login for user: azdi
+2026-10-04 15:45:11 - INFO - Application closed by user: azdi
+2026-10-04 15:45:29 - INFO - Aplikasi dimulai
+2026-10-04 15:45:32 - INFO - Application closed by user: None
+2026-10-04 15:45:36 - INFO - Aplikasi dimulai
+2026-10-04 15:45:56 - INFO - Login attempt for username: admin
+2026-10-04 15:45:56 - INFO - Successful login for user: admin
+2026-10-04 15:48:02 - INFO - Data submitted by user: admin - NIM: 221123456
+2026-10-04 15:48:11 - INFO - Biodata saved by user: admin - file: biodata_admin_20261004_154811.txt
+2026-10-04 15:49:18 - INFO - User logout: admin
+2026-10-04 15:49:28 - INFO - Login attempt for username: azdi
+2026-10-04 15:49:28 - INFO - Successful login for user: azdi
+2026-10-04 15:49:57 - INFO - User logout: azdi
+2026-10-04 15:50:05 - INFO - Login attempt for username: azdi
+2026-10-04 15:50:05 - INFO - Successful login for user: azdi
+2026-10-04 15:50:09 - INFO - User logout: azdi
+2026-10-04 15:50:23 - INFO - Login attempt for username: azdi
+2026-10-04 15:50:23 - INFO - Successful login for user: azdi
+2026-10-04 15:50:26 - INFO - User logout: azdi
+2026-10-04 15:50:30 - INFO - Application closed by user: None
+2026-10-04 16:27:26 - INFO - Aplikasi dimulai
+2026-10-04 16:27:29 - INFO - Application closed by user: None
+2026-10-04 16:27:30 - INFO - Aplikasi dimulai
+2026-10-04 16:27:36 - INFO - Login attempt for username: azdi
+2026-10-04 16:27:36 - INFO - Successful login for user: azdi
+2026-10-04 16:28:49 - INFO - Data submitted by user: azdi - NIM: 12345678
+2026-10-04 16:28:52 - INFO - Biodata saved by user: azdi - file: biodata_azdi_20261004_162852.txt
+2026-10-04 16:28:58 - INFO - User logout: azdi
+2026-10-04 16:29:05 - INFO - Application closed by user: None

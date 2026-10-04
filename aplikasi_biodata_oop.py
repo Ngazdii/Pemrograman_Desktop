@@ -1,6 +1,18 @@
 import tkinter as tk
 from tkinter import messagebox
+import calendar
 import datetime
+import logging
+from pathlib import Path
+import re
+
+# Setup logging
+logging.basicConfig(
+    filename='aplikasi_biodata.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # Membuat kelas utama aplikasi yang mewarisi dari tk.Tk
 class AplikasiBiodata(tk.Tk):
@@ -8,8 +20,11 @@ class AplikasiBiodata(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Aplikasi Biodata Mahasiswa")
-        self.geometry("500x600")
+        self.geometry("600x760")
         self.resizable(True, True)
+        self.username_storage_path = Path(__file__).with_name(".username_tersimpan")
+        self.remembered_username = self._muat_username_tersimpan()
+        self.password_visible = False
 
         # Database user sederhana (dalam aplikasi nyata, ini akan di database)
         self.users_db = {
@@ -23,9 +38,9 @@ class AplikasiBiodata(tk.Tk):
 
         # Warna background berdasarkan username
         self.warna_per_user = {
-            "admin": "#dfeeff",
-            "azdi": "#dff7df",
-            "mahasiswa": "#ffd9cc"
+            "admin": "#649bda",
+            "azdi": "#95cb95",
+            "mahasiswa": "#DEA48B"
         }
 
         # Atribut untuk manajemen frame
@@ -36,9 +51,14 @@ class AplikasiBiodata(tk.Tk):
         # Buat tampilan
         self._buat_tampilan_login()
         self._buat_tampilan_biodata()
+        self._buat_menu()
+        self.protocol("WM_DELETE_WINDOW", self.keluar_aplikasi)
 
         # Tampilkan frame login di awal
         self._pindah_ke(self.frame_login)
+
+        # Log aplikasi start
+        logging.info("Aplikasi dimulai")
         
 
     def _buat_tampilan_biodata(self):  
@@ -48,6 +68,9 @@ class AplikasiBiodata(tk.Tk):
         self.var_nama = tk.StringVar()
         self.var_nim = tk.StringVar()
         self.var_jurusan = tk.StringVar()
+        self.var_email = tk.StringVar()
+        self.var_telepon = tk.StringVar()
+        self.var_tanggal_lahir = tk.StringVar()
         self.var_jk = tk.StringVar(value="Pria")
         self.var_setuju = tk.IntVar()
 
@@ -55,6 +78,9 @@ class AplikasiBiodata(tk.Tk):
         self.var_nama.trace_add("write", self.validate_form)
         self.var_nim.trace_add("write", self.validate_form)
         self.var_jurusan.trace_add("write", self.validate_form)
+        self.var_email.trace_add("write", self.validate_form)
+        self.var_telepon.trace_add("write", self.validate_form)
+        self.var_tanggal_lahir.trace_add("write", self.validate_form)
 
         # --- Frame Utama ---
         # Frame utama juga menjadi atribut
@@ -142,13 +168,71 @@ class AplikasiBiodata(tk.Tk):
         )
         self.entry_jurusan.grid(row=2, column=1, pady=2)
 
+        # Input email
+        self.label_email = tk.Label(
+            master=self.frame_input,
+            text="Email:",
+            font=("Arial", 12)
+        )
+        self.label_email.grid(row=3, column=0, sticky="W", pady=2)
+        self.entry_email = tk.Entry(
+            master=self.frame_input,
+            width=30,
+            font=("Arial", 12),
+            textvariable=self.var_email
+        )
+        self.entry_email.grid(row=3, column=1, pady=2)
+
+        # Input telepon hanya menerima angka
+        validasi_telepon = (self.register(self._hanya_angka), "%P")
+        self.label_telepon = tk.Label(
+            master=self.frame_input,
+            text="Telepon:",
+            font=("Arial", 12)
+        )
+        self.label_telepon.grid(row=4, column=0, sticky="W", pady=2)
+        self.entry_telepon = tk.Entry(
+            master=self.frame_input,
+            width=30,
+            font=("Arial", 12),
+            textvariable=self.var_telepon,
+            validate="key",
+            validatecommand=validasi_telepon
+        )
+        self.entry_telepon.grid(row=4, column=1, pady=2)
+
+        # Pilih tanggal lahir melalui kalender
+        self.label_tanggal_lahir = tk.Label(
+            master=self.frame_input,
+            text="Tanggal Lahir:",
+            font=("Arial", 12)
+        )
+        self.label_tanggal_lahir.grid(row=5, column=0, sticky="W", pady=2)
+        self.frame_tanggal_lahir = tk.Frame(master=self.frame_input)
+        self.frame_tanggal_lahir.grid(row=5, column=1, sticky="EW", pady=2)
+        self.frame_tanggal_lahir.grid_columnconfigure(0, weight=1)
+        self.entry_tanggal_lahir = tk.Entry(
+            master=self.frame_tanggal_lahir,
+            width=20,
+            font=("Arial", 12),
+            textvariable=self.var_tanggal_lahir,
+            state="readonly"
+        )
+        self.entry_tanggal_lahir.grid(row=0, column=0, sticky="EW")
+        self.btn_pilih_tanggal = tk.Button(
+            master=self.frame_tanggal_lahir,
+            text="Pilih",
+            command=self._buka_kalender
+        )
+        self.btn_pilih_tanggal.grid(row=0, column=1, padx=(6, 0))
+
         # Input alamat dengan Text widget
         self.label_alamat = tk.Label(
             master=self.frame_input, 
             text="Alamat:", 
             font=("Arial", 12)
         )
-        self.label_alamat.grid(row=3, column=0, sticky="NW", pady=2)
+        self.label_alamat.grid(row=6, column=0, sticky="NW", pady=2)
 
         # Frame untuk Text dan Scrollbar
         self.frame_alamat = tk.Frame(
@@ -173,7 +257,7 @@ class AplikasiBiodata(tk.Tk):
         # Hubungkan scrollbar dengan text
         self.scrollbar_alamat.config(command=self.text_alamat.yview)
         self.text_alamat.config(yscrollcommand=self.scrollbar_alamat.set)
-        self.frame_alamat.grid(row=3, column=1, pady=2)
+        self.frame_alamat.grid(row=6, column=1, pady=2)
 
         # Jenis kelamin
         self.label_jk = tk.Label(
@@ -181,10 +265,10 @@ class AplikasiBiodata(tk.Tk):
             text="Jenis Kelamin:", 
             font=("Arial", 12)
         )
-        self.label_jk.grid(row=4, column=0, sticky="W", pady=2)
+        self.label_jk.grid(row=7, column=0, sticky="W", pady=2)
 
         self.frame_jk = tk.Frame(master=self.frame_input)
-        self.frame_jk.grid(row=4, column=1, sticky="W")
+        self.frame_jk.grid(row=7, column=1, sticky="W")
 
         self.radio_pria = tk.Radiobutton(
             master=self.frame_jk,
@@ -209,17 +293,31 @@ class AplikasiBiodata(tk.Tk):
             font=("Arial", 10),
             command=self.validate_form
         )
-        self.check_setuju.grid(row=5, column=0, columnspan=2, pady=10, sticky="W")
+        self.check_setuju.grid(row=8, column=0, columnspan=2, pady=10, sticky="W")
 
         self.frame_input.grid(row=1, column=0, columnspan=2, sticky="EW")
+        self.frame_actions = tk.Frame(master=self.frame_biodata)
+        self.frame_actions.grid(row=6, column=0, columnspan=2, sticky="EW", pady=20)
+        self.frame_actions.grid_columnconfigure(0, weight=1)
+        self.frame_actions.grid_columnconfigure(1, weight=1)
+
+        self.btn_reset = tk.Button(
+            master=self.frame_actions,
+            text="Reset Form",
+            font=("Arial", 12, "bold"),
+            bg="#f7f7f7",
+            command=self._reset_form_biodata
+        )
+        self.btn_reset.grid(row=0, column=0, sticky="EW", padx=(0, 6))
+
         self.btn_submit = tk.Button(
-            master=self.frame_biodata, 
+            master=self.frame_actions,
             text="Submit Biodata", 
             font=("Arial", 12, "bold"),
             command=self.submit_data,
             state=tk.DISABLED
         )
-        self.btn_submit.grid(row=6, column=0, columnspan=2, pady=20, sticky="EW")
+        self.btn_submit.grid(row=0, column=1, sticky="EW", padx=(6, 0))
 
         # Event bindings untuk hover dan keyboard shortcuts
         self.btn_submit.bind("<Enter>", self.on_enter)
@@ -250,7 +348,7 @@ class AplikasiBiodata(tk.Tk):
         file_menu = tk.Menu(master=menu_bar, tearoff=0)
         file_menu.add_command(label="Simpan Hasil", command=self.simpan_hasil)
         file_menu.add_separator()
-        file_menu.add_command(label="Keluar", command=self.destroy)
+        file_menu.add_command(label="Keluar", command=self.keluar_aplikasi)
 
         menu_bar.add_cascade(label="File", menu=file_menu)
 
@@ -323,8 +421,12 @@ class AplikasiBiodata(tk.Tk):
             fg="#343a40"
         ).grid(row=4, column=0, sticky="w", pady=(0, 5))
 
+        self.frame_password = tk.Frame(master=self.panel_login, bg="#ffffff")
+        self.frame_password.grid(row=5, column=0, sticky="ew")
+        self.frame_password.grid_columnconfigure(0, weight=1)
+
         self.entry_password = tk.Entry(
-            self.panel_login,
+            self.frame_password,
             width=32,
             font=("Arial", 11),
             show="*",
@@ -334,7 +436,39 @@ class AplikasiBiodata(tk.Tk):
             highlightbackground="#ced4da",
             highlightcolor="#6c757d"
         )
-        self.entry_password.grid(row=5, column=0, sticky="ew", ipady=6)
+        self.entry_password.grid(row=0, column=0, sticky="ew", ipady=6)
+
+        self.btn_toggle_password = tk.Canvas(
+            self.frame_password,
+            width=32,
+            height=26,
+            bg="#ffffff",
+            highlightthickness=0,
+            cursor="hand2",
+            takefocus=True
+        )
+        self.btn_toggle_password.grid(row=0, column=1, padx=(8, 0))
+        self.btn_toggle_password.bind("<Button-1>", self._toggle_password_visibility)
+        self.btn_toggle_password.bind("<Return>", self._toggle_password_visibility)
+        self.btn_toggle_password.bind("<space>", self._toggle_password_visibility)
+        self._gambar_ikon_password()
+
+        self.var_remember_me = tk.BooleanVar(value=bool(self.remembered_username))
+        if self.remembered_username:
+            self.entry_username.insert(0, self.remembered_username)
+
+        self.check_remember_me = tk.Checkbutton(
+            self.panel_login,
+            text="Ingat username",
+            variable=self.var_remember_me,
+            command=self._ubah_remember_me,
+            font=("Arial", 9),
+            bg="#ffffff",
+            fg="#343a40",
+            activebackground="#ffffff",
+            anchor="w"
+        )
+        self.check_remember_me.grid(row=6, column=0, sticky="w", pady=(8, 0))
 
         self.btn_login = tk.Button(
             self.panel_login,
@@ -348,7 +482,7 @@ class AplikasiBiodata(tk.Tk):
             cursor="hand2",
             command=self._coba_login
         )
-        self.btn_login.grid(row=6, column=0, sticky="ew", ipady=7, pady=(20, 16))
+        self.btn_login.grid(row=7, column=0, sticky="ew", ipady=7, pady=(14, 16))
 
         # Keyboard shortcuts untuk login
         self.entry_username.bind("<Return>", lambda e: self.entry_password.focus_set())
@@ -365,7 +499,66 @@ class AplikasiBiodata(tk.Tk):
             padx=10,
             pady=9
         )
-        self.label_info_login.grid(row=7, column=0, sticky="ew")
+        self.label_info_login.grid(row=8, column=0, sticky="ew")
+
+    def _muat_username_tersimpan(self):
+        try:
+            return self.username_storage_path.read_text(encoding="utf-8").strip()
+        except FileNotFoundError:
+            return ""
+        except OSError:
+            logging.exception("Gagal membaca username yang tersimpan")
+            messagebox.showerror(
+                "Gagal Membaca Preferensi",
+                "Username tersimpan tidak dapat dibaca."
+            )
+            return ""
+
+    def _simpan_username_tersimpan(self, username):
+        try:
+            if username:
+                self.username_storage_path.write_text(username, encoding="utf-8")
+            elif self.username_storage_path.exists():
+                self.username_storage_path.unlink()
+        except OSError:
+            logging.exception("Gagal menyimpan preferensi username")
+            messagebox.showerror(
+                "Gagal Menyimpan Preferensi",
+                "Preferensi username tidak dapat disimpan."
+            )
+
+    def _ubah_remember_me(self):
+        if not self.var_remember_me.get():
+            self.remembered_username = ""
+            self._simpan_username_tersimpan("")
+
+    def _toggle_password_visibility(self, event):
+        event.widget.focus_set()
+        self.password_visible = not self.password_visible
+        self.entry_password.configure(show="" if self.password_visible else "*")
+        self._gambar_ikon_password()
+        return "break"
+
+    def _gambar_ikon_password(self):
+        self.btn_toggle_password.delete("all")
+        self.btn_toggle_password.create_polygon(
+            3, 13, 10, 6, 16, 4, 22, 6, 29, 13, 22, 20, 16, 22, 10, 20,
+            smooth=True,
+            fill="#ffffff",
+            outline="#495057",
+            width=2
+        )
+        self.btn_toggle_password.create_oval(
+            12, 9, 20, 17,
+            fill="#495057",
+            outline="#495057"
+        )
+        if not self.password_visible:
+            self.btn_toggle_password.create_line(
+                5, 22, 27, 4,
+                fill="#495057",
+                width=2
+            )
 
     def _pindah_ke(self, frame_tujuan):
         if self.frame_aktif is not None:
@@ -381,18 +574,23 @@ class AplikasiBiodata(tk.Tk):
             self.after(100, lambda: self.entry_nama.focus_set())
 
     def _coba_login(self):
-        """Method untuk memproses attempt login"""
+        """Method untuk memproses attempt login dengan logging"""
         username = self.entry_username.get().strip()
         password = self.entry_password.get()
 
+        # Log attempt login
+        logging.info(f"Login attempt for username: {username}")
+
         # Validasi input kosong
         if not username or not password:
+            logging.warning(f"Empty credentials attempt for username: {username}")
             messagebox.showwarning("Login Gagal", "Username dan Password tidak boleh kosong.")
             self.entry_username.focus_set()
             return
 
         # Validasi panjang minimum
         if len(username) < 3:
+            logging.warning(f"Username too short: {username}")
             messagebox.showwarning("Login Gagal", "Username minimal 3 karakter.")
             self.entry_username.focus_set()
             return
@@ -400,18 +598,22 @@ class AplikasiBiodata(tk.Tk):
         # Cek kredensial di database
         if username in self.users_db and self.users_db[username] == password:
             self.current_user = username
+            self.remembered_username = username if self.var_remember_me.get() else ""
+            self._simpan_username_tersimpan(self.remembered_username)
+            logging.info(f"Successful login for user: {username}")
             messagebox.showinfo("Login Berhasil", f"Selamat Datang, {username}!")
             self._reset_form_biodata()
             self._update_title_with_user()
             self._atur_warna_berdasarkan_user()
-            self._buat_menu()
             self._pindah_ke(self.frame_biodata)
-            # Bersihkan field login setelah berhasil
             self.entry_username.delete(0, tk.END)
             self.entry_password.delete(0, tk.END)
+            self.entry_password.configure(show="*")
+            self.password_visible = False
+            self._gambar_ikon_password()
         else:
+            logging.warning(f"Failed login attempt for username: {username}")
             messagebox.showerror("Login Gagal", "Username atau Password salah.")
-            # Bersihkan password dan focus ke username
             self.entry_password.delete(0, tk.END)
             self.entry_username.focus_set()
 
@@ -420,6 +622,9 @@ class AplikasiBiodata(tk.Tk):
         self.var_nama.set("")
         self.var_nim.set("")
         self.var_jurusan.set("")
+        self.var_email.set("")
+        self.var_telepon.set("")
+        self.var_tanggal_lahir.set("")
         self.text_alamat.delete("1.0", tk.END)
         self.var_jk.set("Pria")
         self.var_setuju.set(0)
@@ -443,6 +648,8 @@ class AplikasiBiodata(tk.Tk):
 
         if hasattr(self, "frame_biodata"):
             self.frame_biodata.configure(bg=warna)
+        if hasattr(self, "frame_actions"):
+            self.frame_actions.configure(bg=warna)
         if hasattr(self, "frame_header"):
             self.frame_header.configure(bg=warna)
         if hasattr(self, "frame_input"):
@@ -457,6 +664,9 @@ class AplikasiBiodata(tk.Tk):
             getattr(self, "label_nama", None),
             getattr(self, "label_nim", None),
             getattr(self, "label_jurusan", None),
+            getattr(self, "label_email", None),
+            getattr(self, "label_telepon", None),
+            getattr(self, "label_tanggal_lahir", None),
             getattr(self, "label_alamat", None),
             getattr(self, "label_jk", None),
             getattr(self, "radio_pria", None),
@@ -477,12 +687,19 @@ class AplikasiBiodata(tk.Tk):
             getattr(self, "entry_nama", None),
             getattr(self, "entry_nim", None),
             getattr(self, "entry_jurusan", None),
+            getattr(self, "entry_email", None),
+            getattr(self, "entry_telepon", None),
+            getattr(self, "entry_tanggal_lahir", None),
             getattr(self, "text_alamat", None),
             getattr(self, "entry_username", None),
             getattr(self, "entry_password", None),
         ]:
             if widget is not None:
                 widget.configure(bg="#ffffff")
+        if hasattr(self, "frame_tanggal_lahir"):
+            self.frame_tanggal_lahir.configure(bg=warna)
+        if hasattr(self, "entry_tanggal_lahir"):
+            self.entry_tanggal_lahir.configure(readonlybackground="#ffffff")
 
     def submit_data(self):
         """Submit data biodata dengan validasi lengkap"""
@@ -496,6 +713,9 @@ class AplikasiBiodata(tk.Tk):
             nama = self.entry_nama.get().strip()
             nim = self.entry_nim.get().strip()
             jurusan = self.entry_jurusan.get().strip()
+            email = self.var_email.get().strip()
+            telepon = self.var_telepon.get().strip()
+            tanggal_lahir = self.var_tanggal_lahir.get().strip()
             alamat = self.text_alamat.get("1.0", tk.END).strip()
             jenis_kelamin = self.var_jk.get()
 
@@ -516,16 +736,43 @@ class AplikasiBiodata(tk.Tk):
                 self.entry_nama.focus_set()
                 return
 
+            if not self._email_valid(email):
+                messagebox.showwarning("Format Email Salah", "Masukkan alamat email dengan format yang valid.")
+                self.entry_email.focus_set()
+                return
+
+            if not self._telepon_valid(telepon):
+                messagebox.showwarning(
+                    "Format Telepon Salah",
+                    "Telepon harus berupa 10-13 digit yang diawali 08, atau 11-14 digit yang diawali 628."
+                )
+                self.entry_telepon.focus_set()
+                return
+
+            if not self._tanggal_lahir_valid(tanggal_lahir):
+                messagebox.showwarning("Tanggal Lahir Salah", "Pilih tanggal lahir yang valid dan tidak di masa depan.")
+                self.btn_pilih_tanggal.focus_set()
+                return
+
             # Tampilkan hasil
-            hasil = f"Nama: {nama}\nNIM: {nim}\nJurusan: {jurusan}\nAlamat: {alamat}\nJenis Kelamin: {jenis_kelamin}"
+            hasil = (
+                f"Nama: {nama}\nNIM: {nim}\nJurusan: {jurusan}\n"
+                f"Email: {email}\nTelepon: {telepon}\nTanggal Lahir: {tanggal_lahir}\n"
+                f"Alamat: {alamat}\nJenis Kelamin: {jenis_kelamin}"
+            )
             messagebox.showinfo("Data Tersimpan", hasil)
 
             # Tampilkan hasil di label dengan info user
             hasil_lengkap = f"BIODATA TERSIMPAN:\nDiinput oleh: {self.current_user}\n\n{hasil}"
             self.label_hasil.config(text=hasil_lengkap)
 
+            # Log successful data submission
+            logging.info(f"Data submitted by user: {self.current_user} - NIM: {nim}")
+
         except Exception as e:
+            logging.exception(f"Error in submit_data by {self.current_user}")
             messagebox.showerror("Error", f"Terjadi kesalahan saat memproses data:\n{str(e)}")
+
 
     def _tampilkan_error_nim(self):
         dialog = tk.Toplevel(self)
@@ -595,6 +842,9 @@ class AplikasiBiodata(tk.Tk):
             self.var_nama.get().strip(),
             self.var_nim.get().strip(),
             self.var_jurusan.get().strip(),
+            self._email_valid(self.var_email.get().strip()),
+            self._telepon_valid(self.var_telepon.get().strip()),
+            self._tanggal_lahir_valid(self.var_tanggal_lahir.get().strip()),
             self.var_setuju.get() == 1,
         ))
 
@@ -602,6 +852,204 @@ class AplikasiBiodata(tk.Tk):
             self.btn_submit.config(
                 state=tk.NORMAL if form_is_valid else tk.DISABLED
             )
+
+    @staticmethod
+    def _hanya_angka(value):
+        return all("0" <= karakter <= "9" for karakter in value)
+
+    @staticmethod
+    def _email_valid(email):
+        return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email))
+
+    @staticmethod
+    def _telepon_valid(telepon):
+        return bool(re.fullmatch(r"(?:08\d{8,11}|628\d{8,11})", telepon))
+
+    @staticmethod
+    def _tanggal_lahir_valid(tanggal_lahir):
+        try:
+            tanggal = datetime.datetime.strptime(tanggal_lahir, "%d/%m/%Y").date()
+        except ValueError:
+            return False
+        return tanggal <= datetime.date.today()
+
+    def _buka_kalender(self):
+        tanggal_terpilih = None
+        if self._tanggal_lahir_valid(self.var_tanggal_lahir.get()):
+            tanggal_terpilih = datetime.datetime.strptime(
+                self.var_tanggal_lahir.get(), "%d/%m/%Y"
+            ).date()
+        tanggal_awal = tanggal_terpilih or datetime.date.today()
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Pilih Tanggal Lahir")
+        dialog.resizable(False, False)
+        dialog.transient(self)
+
+        bulan_indonesia = (
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        )
+        bulan_tampil = {"tahun": tanggal_awal.year, "bulan": tanggal_awal.month}
+        header = tk.Frame(dialog, padx=8, pady=8)
+        header.pack(fill=tk.X)
+        tombol_bulan_sebelumnya = tk.Button(header, text="<", width=3)
+        tombol_bulan_sebelumnya.pack(side=tk.LEFT)
+        frame_judul_bulan = tk.Frame(header)
+        frame_judul_bulan.pack(side=tk.LEFT, expand=True)
+        tombol_pilih_bulan = tk.Button(
+            frame_judul_bulan,
+            font=("Arial", 11, "bold"),
+            relief=tk.FLAT,
+            cursor="hand2"
+        )
+        tombol_pilih_bulan.pack(side=tk.LEFT)
+        tombol_pilih_tahun = tk.Button(
+            frame_judul_bulan,
+            font=("Arial", 11, "bold"),
+            relief=tk.FLAT,
+            cursor="hand2"
+        )
+        tombol_pilih_tahun.pack(side=tk.LEFT, padx=(4, 0))
+        tombol_bulan_selanjutnya = tk.Button(header, text=">", width=3)
+        tombol_bulan_selanjutnya.pack(side=tk.RIGHT)
+
+        frame_konten = tk.Frame(dialog, padx=8, pady=4)
+        frame_konten.pack(pady=(0, 8))
+        frame_hari = tk.Frame(frame_konten)
+        frame_bulan = tk.Frame(frame_konten)
+        frame_tahun = tk.Frame(frame_konten)
+        variabel_tahun = tk.StringVar(value=str(tanggal_awal.year))
+
+        def tampilkan_kalender():
+            frame_bulan.pack_forget()
+            frame_tahun.pack_forget()
+            frame_hari.pack()
+            gambar_kalender()
+
+        def pilih_bulan(bulan):
+            bulan_tampil["bulan"] = bulan
+            tampilkan_kalender()
+
+        def pilih_tahun():
+            try:
+                tahun = int(variabel_tahun.get())
+            except ValueError:
+                messagebox.showwarning("Tahun Tidak Valid", "Masukkan tahun berupa angka.", parent=dialog)
+                return
+            if not 1 <= tahun <= datetime.date.today().year:
+                messagebox.showwarning(
+                    "Tahun Tidak Valid",
+                    f"Tahun harus antara 1 dan {datetime.date.today().year}.",
+                    parent=dialog
+                )
+                return
+            bulan_tampil["tahun"] = tahun
+            tampilkan_kalender()
+
+        def tampilkan_pemilih_bulan():
+            frame_hari.pack_forget()
+            frame_tahun.pack_forget()
+            for widget in frame_bulan.winfo_children():
+                widget.destroy()
+            for bulan, nama_bulan in enumerate(bulan_indonesia, start=1):
+                tk.Button(
+                    frame_bulan,
+                    text=nama_bulan,
+                    width=11,
+                    command=lambda nilai=bulan: pilih_bulan(nilai)
+                ).grid(row=(bulan - 1) // 3, column=(bulan - 1) % 3, padx=2, pady=2)
+            frame_bulan.pack()
+
+        def tampilkan_pemilih_tahun():
+            frame_hari.pack_forget()
+            frame_bulan.pack_forget()
+            for widget in frame_tahun.winfo_children():
+                widget.destroy()
+            variabel_tahun.set(str(bulan_tampil["tahun"]))
+            tk.Label(
+                frame_tahun,
+                text=f"Tahun (1–{datetime.date.today().year}):",
+                font=("Arial", 10)
+            ).pack(pady=(4, 6))
+            tk.Spinbox(
+                frame_tahun,
+                from_=1,
+                to=datetime.date.today().year,
+                textvariable=variabel_tahun,
+                width=10,
+                justify=tk.CENTER,
+                font=("Arial", 12)
+            ).pack(pady=(0, 8))
+            tk.Button(
+                frame_tahun,
+                text="Pilih Tahun",
+                command=pilih_tahun
+            ).pack()
+            frame_tahun.pack()
+
+        def pilih_tanggal(hari):
+            tanggal = datetime.date(bulan_tampil["tahun"], bulan_tampil["bulan"], hari)
+            self.var_tanggal_lahir.set(tanggal.strftime("%d/%m/%Y"))
+            dialog.destroy()
+
+        def ubah_bulan(perubahan):
+            bulan = bulan_tampil["bulan"] + perubahan
+            tahun = bulan_tampil["tahun"]
+            if bulan < 1:
+                bulan, tahun = 12, tahun - 1
+            elif bulan > 12:
+                bulan, tahun = 1, tahun + 1
+            bulan_tampil.update(tahun=tahun, bulan=bulan)
+            gambar_kalender()
+
+        def gambar_kalender():
+            for widget in frame_hari.winfo_children():
+                widget.destroy()
+            for kolom, nama_hari in enumerate(("Sn", "Sl", "Rb", "Km", "Jm", "Sb", "Mg")):
+                tk.Label(
+                    frame_hari,
+                    text=nama_hari,
+                    width=4,
+                    font=("Arial", 9, "bold")
+                ).grid(row=0, column=kolom, pady=(0, 4))
+
+            tahun = bulan_tampil["tahun"]
+            bulan = bulan_tampil["bulan"]
+            tombol_pilih_bulan.config(text=bulan_indonesia[bulan - 1])
+            tombol_pilih_tahun.config(text=str(tahun))
+            variabel_tahun.set(str(tahun))
+            bulan_sekarang = (tahun, bulan) >= (datetime.date.today().year, datetime.date.today().month)
+            tombol_bulan_selanjutnya.config(
+                state=tk.DISABLED if bulan_sekarang else tk.NORMAL
+            )
+            tombol_bulan_sebelumnya.config(
+                state=tk.DISABLED if (tahun, bulan) <= (1, 1) else tk.NORMAL
+            )
+
+            for baris, minggu in enumerate(calendar.monthcalendar(tahun, bulan), start=1):
+                for kolom, hari in enumerate(minggu):
+                    if hari:
+                        tanggal = datetime.date(tahun, bulan, hari)
+                        tk.Button(
+                            frame_hari,
+                            text=str(hari),
+                            width=4,
+                            state=tk.NORMAL if tanggal <= datetime.date.today() else tk.DISABLED,
+                            command=lambda nilai=hari: pilih_tanggal(nilai)
+                        ).grid(row=baris, column=kolom, padx=1, pady=1)
+
+        tombol_bulan_sebelumnya.config(command=lambda: ubah_bulan(-1))
+        tombol_bulan_selanjutnya.config(command=lambda: ubah_bulan(1))
+        tombol_pilih_bulan.config(command=tampilkan_pemilih_bulan)
+        tombol_pilih_tahun.config(command=tampilkan_pemilih_tahun)
+        tampilkan_kalender()
+        dialog.update_idletasks()
+        x = self.winfo_rootx() + (self.winfo_width() - dialog.winfo_width()) // 2
+        y = self.winfo_rooty() + (self.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+        dialog.grab_set()
+        dialog.wait_window()
 
     def simpan_hasil(self):
         """Simpan hasil biodata ke file dengan error handling"""
@@ -622,33 +1070,45 @@ class AplikasiBiodata(tk.Tk):
                 file.write("-" * 50 + "\n")
                 file.write(hasil_tersimpan)
 
+            logging.info(f"Biodata saved by user: {self.current_user} - file: {filename}")
             messagebox.showinfo("Info", f"Data berhasil disimpan ke file '{filename}'.")
 
         except PermissionError:
+            logging.exception("Permission error while saving biodata for user: %s", self.current_user)
             messagebox.showerror("Error", "Tidak memiliki izin untuk menyimpan file di lokasi ini.")
         except Exception as e:
+            logging.exception("Error while saving biodata for user: %s", self.current_user)
             messagebox.showerror("Error", f"Terjadi kesalahan saat menyimpan file:\n{str(e)}")
 
     def _logout(self):
-        """Method untuk logout dan kembali ke halaman login"""
+        """Method untuk logout dengan logging"""
         if messagebox.askyesno("Logout", f"Apakah {self.current_user} yakin ingin logout?"):
+            logging.info(f"User logout: {self.current_user}")
             # Reset status user
             self.current_user = None
-            # Hapus menu
-            self._hapus_menu()
+            self._atur_warna_berdasarkan_user()
             # Update title
             self._update_title_with_user()
-            # Reset background ke default
-            self._atur_warna_berdasarkan_user()
             # Bersihkan field login
             self.entry_username.delete(0, tk.END)
             self.entry_password.delete(0, tk.END)
+            self.entry_password.configure(show="*")
+            self.password_visible = False
+            self._gambar_ikon_password()
+            if self.var_remember_me.get():
+                self.entry_username.insert(0, self.remembered_username)
             # Reset form biodata
             self._reset_form_biodata()
             # Kembali ke halaman login
             self._pindah_ke(self.frame_login)
             # Focus ke username field
             self.entry_username.focus_set()
+
+    def keluar_aplikasi(self):
+        """Keluar dari aplikasi dengan konfirmasi"""
+        if messagebox.askokcancel("Keluar", "Apakah Anda yakin ingin keluar dari aplikasi?"):
+            logging.info(f"Application closed by user: {self.current_user}")
+            self.destroy()
 
     def on_enter(self, event):
         if self.btn_submit["state"] == tk.NORMAL:
