@@ -12,3 +12,4 @@ Telepon: 0812345678
 Tanggal Lahir: 10/05/2006
 Alamat: dabag
 Jenis Kelamin: Pria
+
